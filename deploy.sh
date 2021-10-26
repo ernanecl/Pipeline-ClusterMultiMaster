@@ -1,15 +1,8 @@
 #!/bin/bash
 
-# ID_M1_DNS="ubuntu@ec2-18-234-97-123.compute-1.amazonaws.com"
-# ID_M1_DNS=$(echo "$ID_M1_DNS" | cut -b 8-)
-# echo ${ID_M1_DNS}
-
-#### idéia para buscar itens do debugger do ansible ####
-# | grep -oP "(kubeadm join.*?certificate-key.*?)'" | sed 's/\\//g' | sed "s/'//g" | sed "s/'t//g" | sed "s/,//g"
-
-cd 0-terraform
-~/terraform/terraform init
-~/terraform/terraform apply -auto-approve
+cd terraform
+terraform init
+terraform apply -auto-approve
 
 echo  "Aguardando a criação das maquinas ..."
 sleep 5
@@ -24,8 +17,8 @@ ID_M3=$(~/terraform/terraform output | grep 'k8s-master 3 -' | awk '{print $4;ex
 ID_M3_DNS=$(~/terraform/terraform output | grep 'k8s-master 3 -' | awk '{print $9;exit}' | cut -b 8-)
 
 
-ID_HAPROXY=$(~/terraform/terraform output | grep 'k8s_proxy -' | awk '{print $3;exit}')
-ID_HAPROXY_DNS=$(~/terraform/terraform output | grep 'k8s_proxy -' | awk '{print $8;exit}' | cut -b 8-)
+ID-HAPROXY=$(~/terraform/terraform output | grep 'k8s_proxy -' | awk '{print $3;exit}')
+ID-HAPROXY_DNS=$(~/terraform/terraform output | grep 'k8s_proxy -' | awk '{print $8;exit}' | cut -b 8-)
 
 
 ID_W1=$(~/terraform/terraform output | grep 'k8s-workers 1 -' | awk '{print $4;exit}')
@@ -52,7 +45,7 @@ $ID_W1_DNS
 $ID_W2_DNS
 [ec2-k8s-w3]
 $ID_W3_DNS
-" > ../2-ansible/01-k8s-install-masters_e_workers/hosts
+" > ../ansible/01-k8s-install-masters_e_workers/hosts
 
 echo "
 global
@@ -98,7 +91,7 @@ backend k8s-masters
         server k8s-master-1 $ID_M2:6443 check fall 3 rise 2 # IP ec2 Cluster Master k8s - 2 
         server k8s-master-2 $ID_M3:6443 check fall 3 rise 2 # IP ec2 Cluster Master k8s - 3 
         
-" > ../2-ansible/01-k8s-install-masters_e_workers/haproxy/haproxy.cfg
+" > ../ansible/01-k8s-install-masters_e_workers/haproxy/haproxy.cfg
 
 
 echo "
@@ -111,19 +104,17 @@ ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
-" > ../2-ansible/01-k8s-install-masters_e_workers/host/hosts
+" > ../ansible/01-k8s-install-masters_e_workers/host/hosts
 
 
-cd ../2-ansible/01-k8s-install-masters_e_workers
+cd ../ansible/01-k8s-install-masters_e_workers
 
-ANSIBLE_OUT=$(ansible-playbook -i hosts provisionar.yml -u ubuntu --private-key ~/Desktop/devops/treinamentoItau)
+ANSIBLE_OUT=$(ansible-playbook -i hosts provisionar.yml -u ubuntu --private-key /var/lib/jenkins/.ssh/id_rsa)
 
-#### Mac ###
-K8S_JOIN_MASTER=$(echo $ANSIBLE_OUT | grep -oE "(kubeadm join.*?certificate-key.*?)'" | sed 's/\\//g' | sed "s/'t//g" | sed "s/'//g" | sed "s/,//g")
-K8S_JOIN_WORKER=$(echo $ANSIBLE_OUT | grep -oE "(kubeadm join.*?discovery-token-ca-cert-hash.*?)'" | head -n 1 | sed 's/\\//g' | sed "s/'t//g" | sed "s/'//g" | sed "s/'//g" | sed "s/,//g")
-#### Linix ###
-# K8S_JOIN_MASTER=$(echo $ANSIBLE_OUT | grep -oP "(kubeadm join.*?certificate-key.*?)'" | sed 's/\\//g' | sed "s/'t//g" | sed "s/'//g" | sed "s/,//g")
-# K8S_JOIN_WORKER=$(echo $ANSIBLE_OUT | grep -oP "(kubeadm join.*?discovery-token-ca-cert-hash.*?)'" | head -n 1 | sed 's/\\//g' | sed "s/'t//g" | sed "s/'//g" | sed "s/'//g" | sed "s/,//g")
+
+#### Linux ###
+K8S_JOIN_MASTER=$(echo $ANSIBLE_OUT | grep -oP "(kubeadm join.*?certificate-key.*?)'" | sed 's/\\//g' | sed "s/'t//g" | sed "s/'//g" | sed "s/,//g")
+K8S_JOIN_WORKER=$(echo $ANSIBLE_OUT | grep -oP "(kubeadm join.*?discovery-token-ca-cert-hash.*?)'" | head -n 1 | sed 's/\\//g' | sed "s/'t//g" | sed "s/'//g" | sed "s/'//g" | sed "s/,//g")
 
 echo $K8S_JOIN_MASTER
 echo $K8S_JOIN_WORKER
@@ -160,4 +151,4 @@ cat <<EOF > 2-provisionar-k8s-master-auto-shell.yml
       shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=\$(kubectl version | base64 | tr -d '\n')"
 EOF
 
-ansible-playbook -i hosts 2-provisionar-k8s-master-auto-shell.yml -u ubuntu --private-key ~/Desktop/devops/treinamentoItau
+ansible-playbook -i hosts 2-provisionar-k8s-master-auto-shell.yml -u ubuntu --private-key /var/lib/jenkins/.ssh/id_rsa
