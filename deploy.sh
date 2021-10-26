@@ -109,6 +109,7 @@ ff02::3 ip6-allhosts
 
 cd ../ansible/01-k8s-install-masters_e_workers
 
+sleep 15
 ANSIBLE_OUT=$(ansible-playbook -i hosts provisionar.yml -u ubuntu --private-key /var/lib/jenkins/.ssh/id_rsa)
 
 
