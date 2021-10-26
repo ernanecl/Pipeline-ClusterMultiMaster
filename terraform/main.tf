@@ -2,8 +2,18 @@ provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_ami" "k8s_jenkins" {
+  most_recent = true
+  owners = ["671315798734"] # ou ["099720109477"] ID master com permissão para busca
+
+  filter {
+    name   = "name"
+    values = ["k8s-jenkins-v*"] # exemplo de como listar um nome de AMI - 'aws ec2 describe-images --region us-east-1 --image-ids ami-09e67e426f25ce0d7' https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+  }
+}
+
 resource "aws_instance" "k8s_proxy" {
-  ami           = "ami-0af4601551c2c66c2"
+  ami           = "${data.aws_ami.k8s_jenkins.id}"
   subnet_id     = "subnet-0ab487dbac2dcfa24"
   instance_type = "t2.micro"
   key_name      = "id_rsa_jenkins"
@@ -24,7 +34,7 @@ resource "aws_instance" "k8s_proxy" {
 }
 
 resource "aws_instance" "k8s_masters" {
-  ami           = "ami-0af4601551c2c66c2"
+  ami           = "${data.aws_ami.k8s_jenkins.id}"
   subnet_id     = "subnet-0ab487dbac2dcfa24"
   instance_type = "t2.large"
   key_name      = "id_rsa_jenkins"
@@ -49,7 +59,7 @@ resource "aws_instance" "k8s_masters" {
 }
 
 resource "aws_instance" "k8s_workers" {
-  ami           = "ami-0af4601551c2c66c2"
+  ami           = "${data.aws_ami.k8s_jenkins.id}"
   subnet_id     = "subnet-0ab487dbac2dcfa24"
   instance_type = "t2.medium"
   key_name      = "id_rsa_jenkins"
