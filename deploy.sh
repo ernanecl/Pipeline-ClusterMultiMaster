@@ -17,8 +17,8 @@ ID_M3=$(terraform output | grep 'k8s-master 3 -' | awk '{print $4;exit}')
 ID_M3_DNS=$(terraform output | grep 'k8s-master 3 -' | awk '{print $9;exit}' | cut -b 8-)
 
 
-ID-HAPROXY=$(terraform output | grep 'k8s_proxy -' | awk '{print $3;exit}')
-ID-HAPROXY_DNS=$(terraform output | grep 'k8s_proxy -' | awk '{print $8;exit}' | cut -b 8-)
+ID-HAPROXY=$(terraform output | grep 'k8s-proxy -' | awk '{print $3;exit}')
+ID-HAPROXY_DNS=$(terraform output | grep 'k8s-proxy -' | awk '{print $8;exit}' | cut -b 8-)
 
 
 ID_W1=$(terraform output | grep 'k8s-workers 1 -' | awk '{print $4;exit}')
