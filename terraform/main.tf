@@ -14,21 +14,12 @@ data "aws_ami" "k8s_jenkins" {
   }
 }
 
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners = ["099720109477"] # ou ["099720109477"] ID master com permissão para busca
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-*"] # exemplo de como listar um nome de AMI - 'aws ec2 describe-images --region us-east-1 --image-ids ami-09e67e426f25ce0d7' https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
-  }
-}
 
 ############################################# BLOCO INSTANCIAS
 
 resource "aws_instance" "k8s_proxy" {
-  ami           = "${data.aws_ami.ubuntu.id}"
-  subnet_id     = "subnet-0ab487dbac2dcfa24"
+  ami           = "ami-09e67e426f25ce0d7"
+  subnet_id     = "subnet-043dd0bcbe32d666f"
   instance_type = "t2.micro"
   key_name      = "id_rsa_jenkins"
   associate_public_ip_address = true
@@ -42,9 +33,9 @@ resource "aws_instance" "k8s_proxy" {
   }
   
   tags = {
-    Name = "k8s-haproxy"
+    Name = "k8s-haproxy-GamaOne"
   }
-  vpc_security_group_ids  = ["${aws_security_group.kubernetes_workers.id}", "${aws_security_group.kubernetes_geral.id}"]
+  vpc_security_group_ids  = ["${aws_security_group.kubernetes_workers_jks.id}", "${aws_security_group.kubernetes_geral_jks.id}"]
 }
 
 resource "aws_instance" "k8s_masters" {
@@ -64,9 +55,9 @@ resource "aws_instance" "k8s_masters" {
   }
   
   tags = {
-    Name = "k8s-master-${count.index}"
+    Name = "k8s-master-${count.index}-GamaOne"
   }
-  vpc_security_group_ids  = ["${aws_security_group.kubernetes_master.id}", "${aws_security_group.kubernetes_geral.id}"]
+  vpc_security_group_ids  = ["${aws_security_group.kubernetes_master_jks.id}", "${aws_security_group.kubernetes_geral_jks.id}"]
   depends_on = [
     aws_instance.k8s_workers,
   ]
@@ -89,15 +80,15 @@ resource "aws_instance" "k8s_workers" {
   }  
   
   tags = {
-    Name = "k8s_workers-${count.index}"
+    Name = "k8s-workers-${count.index}-GamaOne"
   }
-  vpc_security_group_ids  = ["${aws_security_group.kubernetes_workers.id}", "${aws_security_group.kubernetes_geral.id}"]
+  vpc_security_group_ids  = ["${aws_security_group.kubernetes_workers_jks.id}", "${aws_security_group.kubernetes_geral_jks.id}"]
 }
 
 ############################################# BLOCO SECURITY GROUP
 
-resource "aws_security_group" "kubernetes_master" {
-  name        = "kubernetes_master"
+resource "aws_security_group" "kubernetes_master_jks" {
+  name        = "kubernetes_master_jks"
   description = "Allow SSH inbound traffic criado pelo terraform VPC"
   vpc_id = "vpc-0304dcb48c5e67fa0"
 
@@ -145,8 +136,8 @@ resource "aws_security_group" "kubernetes_master" {
   }
 }
 
-resource "aws_security_group" "kubernetes_workers" {
-  name        = "kubernetes_workers"
+resource "aws_security_group" "kubernetes_workers_jks" {
+  name        = "kubernetes_workers_jks"
   description = "acessos_workers inbound traffic"
   vpc_id = "vpc-0304dcb48c5e67fa0"
 
@@ -183,8 +174,8 @@ resource "aws_security_group" "kubernetes_workers" {
   }
 }
 
-resource "aws_security_group" "kubernetes_geral" {
-  name        = "kubernetes_geral"
+resource "aws_security_group" "kubernetes_geral_jks" {
+  name        = "kubernetes_geral_jks"
   description = "all tcp entre master e nodes do kubernetes"
   vpc_id = "vpc-0304dcb48c5e67fa0"
 
@@ -197,7 +188,7 @@ resource "aws_security_group" "kubernetes_geral" {
       cidr_blocks      = null
       ipv6_cidr_blocks = null,
       prefix_list_ids = null,
-      security_groups: ["${aws_security_group.kubernetes_master.id}", "${aws_security_group.kubernetes_workers.id}"]
+      security_groups: ["${aws_security_group.kubernetes_master_jks.id}", "${aws_security_group.kubernetes_workers_jks.id}"]
       self: null
     },
   ]
@@ -242,11 +233,6 @@ output "output-k8s_proxy" {
     "k8s_proxy - ${aws_instance.k8s_proxy.private_ip} - ssh -i ~/Desktop/devops/treinamentoItau ubuntu@${aws_instance.k8s_proxy.public_dns} -o ServerAliveInterval=60"
   ]
 }
-
-output "security-group-workers-e-haproxy" {
-  value = aws_security_group.acessos.id
-}
-
 
 
 # terraform refresh para mostrar o ssh
