@@ -2,6 +2,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
+############################################# BLOCO DATA
+
 data "aws_ami" "k8s_jenkins" {
   most_recent = true
   owners = ["671315798734"] # ou ["099720109477"] ID master com permissão para busca
@@ -12,8 +14,20 @@ data "aws_ami" "k8s_jenkins" {
   }
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners = ["099720109477"] # ou ["099720109477"] ID master com permissão para busca
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-*"] # exemplo de como listar um nome de AMI - 'aws ec2 describe-images --region us-east-1 --image-ids ami-09e67e426f25ce0d7' https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+  }
+}
+
+############################################# BLOCO INSTANCIAS
+
 resource "aws_instance" "k8s_proxy" {
-  ami           = "${data.aws_ami.k8s_jenkins.id}"
+  ami           = "${data.aws_ami.ubuntu.id}"
   subnet_id     = "subnet-0ab487dbac2dcfa24"
   instance_type = "t2.micro"
   key_name      = "id_rsa_jenkins"
@@ -79,6 +93,8 @@ resource "aws_instance" "k8s_workers" {
   }
   vpc_security_group_ids = [aws_security_group.acessos.id]
 }
+
+############################################# BLOCO SECURITY GROUP
 
 
 resource "aws_security_group" "acessos_master" {
@@ -217,6 +233,8 @@ resource "aws_security_group" "acessos" {
     Name = "allow_ssh"
   }
 }
+
+############################################# BLOCO OUTPUT
 
 output "k8s-masters" {
   value = [
