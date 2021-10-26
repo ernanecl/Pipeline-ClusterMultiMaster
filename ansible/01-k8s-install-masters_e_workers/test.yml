@@ -1,4 +1,5 @@
-- hosts: all
+- hosts:
+  - ec2-k8s-m1
   
   tasks:
     - name: "Status kubeadm"
