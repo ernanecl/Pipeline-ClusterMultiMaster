@@ -1,0 +1,9 @@
+- hosts: all
+  
+  tasks:
+    - name: "Status kubeadm"
+      shell: "kubectl get nodes"      
+      register: ps
+
+    - debug:
+        msg: " '{{ ps.stdout_lines }}' "
