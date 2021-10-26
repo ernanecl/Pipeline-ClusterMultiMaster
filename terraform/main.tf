@@ -90,7 +90,7 @@ resource "aws_instance" "k8s_workers" {
 resource "aws_security_group" "kubernetes_master_jks" {
   name        = "kubernetes_master_jks"
   description = "Allow SSH inbound traffic criado pelo terraform VPC"
-  vpc_id = "vpc-0304dcb48c5e67fa0"
+  vpc_id = "vpc-08e4ed3899b973f28"
 
   ingress = [
     {
@@ -139,7 +139,7 @@ resource "aws_security_group" "kubernetes_master_jks" {
 resource "aws_security_group" "kubernetes_workers_jks" {
   name        = "kubernetes_workers_jks"
   description = "acessos_workers inbound traffic"
-  vpc_id = "vpc-0304dcb48c5e67fa0"
+  vpc_id = "vpc-08e4ed3899b973f28"
 
   ingress = [
     {
@@ -177,7 +177,7 @@ resource "aws_security_group" "kubernetes_workers_jks" {
 resource "aws_security_group" "kubernetes_geral_jks" {
   name        = "kubernetes_geral_jks"
   description = "all tcp entre master e nodes do kubernetes"
-  vpc_id = "vpc-0304dcb48c5e67fa0"
+  vpc_id = "vpc-08e4ed3899b973f28"
 
   ingress = [
     {
