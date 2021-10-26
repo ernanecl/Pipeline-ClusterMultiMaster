@@ -44,7 +44,7 @@ resource "aws_instance" "k8s_proxy" {
   tags = {
     Name = "k8s-haproxy"
   }
-  vpc_security_group_ids = [aws_security_group.acessos.id]
+  vpc_security_group_ids  = ["${aws_security_group.kubernetes_workers.id}", "${aws_security_group.kubernetes_geral.id}"]
 }
 
 resource "aws_instance" "k8s_masters" {
@@ -66,7 +66,7 @@ resource "aws_instance" "k8s_masters" {
   tags = {
     Name = "k8s-master-${count.index}"
   }
-  vpc_security_group_ids = [aws_security_group.acessos_master.id]
+  vpc_security_group_ids  = ["${aws_security_group.kubernetes_master.id}", "${aws_security_group.kubernetes_geral.id}"]
   depends_on = [
     aws_instance.k8s_workers,
   ]
@@ -91,15 +91,15 @@ resource "aws_instance" "k8s_workers" {
   tags = {
     Name = "k8s_workers-${count.index}"
   }
-  vpc_security_group_ids = [aws_security_group.acessos.id]
+  vpc_security_group_ids  = ["${aws_security_group.kubernetes_workers.id}", "${aws_security_group.kubernetes_geral.id}"]
 }
 
 ############################################# BLOCO SECURITY GROUP
 
-
-resource "aws_security_group" "acessos_master" {
-  name        = "k8s-acessos_master"
-  description = "acessos inbound traffic"
+resource "aws_security_group" "kubernetes_master" {
+  name        = "kubernetes_master"
+  description = "Allow SSH inbound traffic criado pelo terraform VPC"
+  vpc_id = "vpc-0304dcb48c5e67fa0"
 
   ingress = [
     {
@@ -108,49 +108,22 @@ resource "aws_security_group" "acessos_master" {
       to_port          = 22
       protocol         = "tcp"
       cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = []
+      ipv6_cidr_blocks = ["::/0"]
       prefix_list_ids = null,
       security_groups: null,
       self: null
     },
     {
-      cidr_blocks      = []
-      description      = "Libera acesso k8s_masters"
-      from_port        = 0
-      ipv6_cidr_blocks = []
-      prefix_list_ids  = []
-      protocol         = "-1"
-      security_groups  = []
-      self             = true
-      to_port          = 0
-    },
-    {
-      cidr_blocks      = []
-      description      = "Libera acesso k8s_workers"
-      from_port        = 0
-      ipv6_cidr_blocks = []
-      prefix_list_ids  = []
-      protocol         = "-1"
-      security_groups  = [
-        "sg-082aca1fa06121961",
-        //aws_security_group.acessos_master.id
-      ]
-      self             = false
-      to_port          = 0
-    },
-    {
-      cidr_blocks      = [
-        "0.0.0.0/0",
-      ]
-      description      = ""
-      from_port        = 0
-      ipv6_cidr_blocks = []
-      prefix_list_ids  = []
+      description      = "Libera porta kubernetes"
+      from_port        = 6443
+      to_port          = 6443
       protocol         = "tcp"
-      security_groups  = []
-      self             = false
-      to_port          = 65535
-    },
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids = null,
+      security_groups = null,
+      self            = null
+    }
   ]
 
   egress = [
@@ -159,7 +132,7 @@ resource "aws_security_group" "acessos_master" {
       to_port          = 0
       protocol         = "-1"
       cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = [],
+      ipv6_cidr_blocks = ["::/0"]
       prefix_list_ids = null,
       security_groups: null,
       self: null,
@@ -168,14 +141,14 @@ resource "aws_security_group" "acessos_master" {
   ]
 
   tags = {
-    Name = "allow_ssh"
+    Name = "kubernetes_master-GamaOne"
   }
 }
 
-
-resource "aws_security_group" "acessos" {
-  name        = "k8s-workers"
-  description = "acessos inbound traffic"
+resource "aws_security_group" "kubernetes_workers" {
+  name        = "kubernetes_workers"
+  description = "acessos_workers inbound traffic"
+  vpc_id = "vpc-0304dcb48c5e67fa0"
 
   ingress = [
     {
@@ -184,34 +157,10 @@ resource "aws_security_group" "acessos" {
       to_port          = 22
       protocol         = "tcp"
       cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = []
+      ipv6_cidr_blocks = ["::/0"]
       prefix_list_ids = null,
       security_groups: null,
       self: null
-    },
-    {
-      cidr_blocks      = []
-      description      = ""
-      from_port        = 0
-      ipv6_cidr_blocks = []
-      prefix_list_ids  = []
-      protocol         = "-1"
-      security_groups  = [
-        aws_security_group.acessos_master.id,
-      ]
-      self             = false
-      to_port          = 0
-    },
-    {
-      cidr_blocks      = []
-      description      = ""
-      from_port        = 0
-      ipv6_cidr_blocks = []
-      prefix_list_ids  = []
-      protocol         = "tcp"
-      security_groups  = []
-      self             = true
-      to_port          = 65535
     },
   ]
 
@@ -221,7 +170,7 @@ resource "aws_security_group" "acessos" {
       to_port          = 0
       protocol         = "-1"
       cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = [],
+      ipv6_cidr_blocks = ["::/0"],
       prefix_list_ids = null,
       security_groups: null,
       self: null,
@@ -230,7 +179,45 @@ resource "aws_security_group" "acessos" {
   ]
 
   tags = {
-    Name = "allow_ssh"
+    Name = "kubernetes_workers-GamaOne"
+  }
+}
+
+resource "aws_security_group" "kubernetes_geral" {
+  name        = "kubernetes_geral"
+  description = "all tcp entre master e nodes do kubernetes"
+  vpc_id = "vpc-0304dcb48c5e67fa0"
+
+  ingress = [
+    {
+      description      = "all tcp entre master e nodes do kubernetes"
+      from_port        = 0
+      to_port          = 0
+      protocol         = -1
+      cidr_blocks      = null
+      ipv6_cidr_blocks = null,
+      prefix_list_ids = null,
+      security_groups: ["${aws_security_group.kubernetes_master.id}", "${aws_security_group.kubernetes_workers.id}"]
+      self: null
+    },
+  ]
+
+  egress = [
+    {
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"],
+      prefix_list_ids = null,
+      security_groups: null,
+      self: null,
+      description: "Libera dados da rede interna"
+    }
+  ]
+
+  tags = {
+    Name = "kubernetes_geral-GamaOne"
   }
 }
 
