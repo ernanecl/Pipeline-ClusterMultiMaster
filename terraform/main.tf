@@ -19,7 +19,7 @@ data "aws_ami" "k8s_jenkins" {
 
 resource "aws_instance" "k8s_proxy" {
   ami           = "ami-09e67e426f25ce0d7"
-  subnet_id     = "subnet-043dd0bcbe32d666f"
+  subnet_id     = "subnet-0fafaa19d0e872983"
   instance_type = "t2.micro"
   key_name      = "id_rsa_jenkins"
   associate_public_ip_address = true
@@ -40,7 +40,7 @@ resource "aws_instance" "k8s_proxy" {
 
 resource "aws_instance" "k8s_masters" {
   ami           = "${data.aws_ami.k8s_jenkins.id}"
-  subnet_id     = "subnet-0ab487dbac2dcfa24"
+  subnet_id     = "subnet-0ce70d0164b8011cc"
   instance_type = "t2.large"
   key_name      = "id_rsa_jenkins"
   count         = 3
@@ -65,7 +65,7 @@ resource "aws_instance" "k8s_masters" {
 
 resource "aws_instance" "k8s_workers" {
   ami           = "${data.aws_ami.k8s_jenkins.id}"
-  subnet_id     = "subnet-0ab487dbac2dcfa24"
+  subnet_id     = "subnet-0fafaa19d0e872983"
   instance_type = "t2.medium"
   key_name      = "id_rsa_jenkins"
   count         = 3
