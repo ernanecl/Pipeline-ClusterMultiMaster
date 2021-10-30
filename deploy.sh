@@ -45,7 +45,7 @@ $ID_W1_DNS
 $ID_W2_DNS
 [ec2-k8s-w3]
 $ID_W3_DNS
-" > ../ansible/01-k8s-install-masters_e_workers/hosts
+" > ../ansible/hosts
 
 echo "
 global
@@ -91,7 +91,7 @@ backend k8s-masters
         server k8s-master-1 $ID_M2:6443 check fall 3 rise 2 # IP ec2 Cluster Master k8s - 2 
         server k8s-master-2 $ID_M3:6443 check fall 3 rise 2 # IP ec2 Cluster Master k8s - 3 
         
-" > ../ansible/01-k8s-install-masters_e_workers/haproxy/haproxy.cfg
+" > ../ansible/haproxy/haproxy.cfg
 
 
 echo "
@@ -104,10 +104,10 @@ ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 ff02::3 ip6-allhosts
-" > ../ansible/01-k8s-install-masters_e_workers/host/hosts
+" > ../ansible/host/hosts
 
 
-cd ../ansible/01-k8s-install-masters_e_workers
+cd ../ansible
 
 sleep 15
 ANSIBLE_OUT=$(ansible-playbook -i hosts provisionar.yml -u ubuntu --private-key /var/lib/jenkins/.ssh/id_rsa)

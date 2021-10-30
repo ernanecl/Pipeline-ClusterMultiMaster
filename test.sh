@@ -1,4 +1,4 @@
-cd ./ansible/01-k8s-install-masters_e_workers
+cd ./ansible
 
 ANSIBLE_OUT=$(ansible-playbook -i hosts test.yml -u ubuntu --private-key /var/lib/jenkins/.ssh/id_rsa)
 echo $ANSIBLE_OUT
